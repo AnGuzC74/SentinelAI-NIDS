@@ -1,9 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
 import random
 import sys
@@ -35,12 +34,14 @@ inicializar_db()
 
 @st.cache_resource
 def cargar_motor():
+    """Instancia el motor de ML una sola vez para ahorrar recursos."""
     return MotorDecision()
 
 motor = cargar_motor()
 
 # --- Funciones de Datos ---
 def obtener_datos():
+    """Recupera los logs desde SQLite de forma segura."""
     try:
         conn = sqlite3.connect('sentinel_logs.db')
         df = pd.read_sql_query("SELECT * FROM logs ORDER BY timestamp DESC", conn)
@@ -53,6 +54,7 @@ def obtener_datos():
         return pd.DataFrame()
 
 def ejecutar_simulacion(n_eventos=20):
+    """Genera tráfico sintético y lo procesa a través del motor de IA."""
     ips_fijas = ["192.168.1.50", "192.168.1.100", "192.168.1.150", "192.168.1.200"]
     for _ in range(n_eventos):
         data = {
@@ -73,29 +75,31 @@ with st.sidebar:
     st.title("🛡️ SentinelAI Panel")
     st.markdown("---")
     
-    st.subheader("Simulación de Tráfico")
-    num_eventos = st.slider("Cantidad de eventos", 5, 100, 20)
-    if st.button("🚀 Disparar Tráfico", use_container_width=True):
-        with st.spinner("Simulando..."):
+    st.subheader("🚀 Simulación de Tráfico")
+    st.write("Genera eventos de red para poner a prueba el motor de IA.")
+    num_eventos = st.slider("Eventos a generar", 5, 100, 20)
+    if st.button("Lanzar Simulación", use_container_width=True):
+        with st.spinner("Motor de IA analizando..."):
             ejecutar_simulacion(num_eventos)
-        st.success(f"{num_eventos} eventos generados.")
+        st.toast(f"✅ {num_eventos} eventos procesados exitosamente.")
+        time.sleep(0.5)
         st.rerun()
 
     st.markdown("---")
-    st.subheader("Configuración de Vista")
+    st.subheader("⚙️ Configuración")
     auto_refresh = st.checkbox("Auto-refrescar (5s)", value=True)
     
     st.markdown("---")
-    st.info("SentinelAI utiliza **Isolation Forest** para detectar anomalías en el tráfico de red local.")
+    st.info("**SentinelAI** utiliza un modelo de **Isolation Forest** para identificar anomalías estadísticas en el tráfico local.")
 
 # --- Dashboard Principal ---
 st.title("SentinelAI: Predictive Network Intrusion Detection System")
-st.caption("Dashboard de monitoreo de seguridad inteligente")
+st.caption(f"Monitoreo de Seguridad Inteligente | Estado del Motor: [ACTIVO] | Última actualización: {datetime.now().strftime('%H:%M:%S')}")
 
 df = obtener_datos()
 
 if df.empty:
-    st.warning("⚠️ No se encontraron registros en la base de datos. Utilice el panel lateral para generar tráfico de prueba.")
+    st.warning("⚠️ **Base de datos vacía.** Por favor, utiliza el botón 'Lanzar Simulación' en el panel lateral para generar tráfico de prueba.")
 else:
     # Métricas Clave
     m1, m2, m3, m4 = st.columns(4)
@@ -112,7 +116,7 @@ else:
 
     st.markdown("---")
     
-    # Gráficos
+    # Gráficos de analytics
     col_left, col_right = st.columns(2)
     
     with col_left:
@@ -126,22 +130,19 @@ else:
         st.plotly_chart(fig_pie, use_container_width=True)
 
     with col_right:
-        st.subheader("🌐 Protocolos por Frecuencia")
+        st.subheader("🌐 Protocolos Detectados")
         fig_bar = px.bar(
             df['protocolo'].value_counts().reset_index(), 
-            x='index', y='protocolo',
-            labels={'index': 'Protocolo', 'protocolo': 'Cant.'},
+            x='index', y='count',
+            labels={'index': 'Protocolo', 'count': 'Frecuencia'},
             color='index',
-            color_discrete_sequence=px.colors.qualitative.Safe
+            color_discrete_sequence=px.colors.qualitative.Pastel
         )
         st.plotly_chart(fig_bar, use_container_width=True)
 
     st.markdown("---")
-    st.subheader("📈 Línea de Tiempo de Amenazas")
+    st.subheader("📈 Cronología de Amenazas (Eventos/Minuto)")
     
-    # Agrupar por tiempo para el gráfico de líneas
-    df_resampled = df.set_index('timestamp').resample('1min').count().reset_index()
-    # Para un gráfico más detallado por riesgo:
     df_time = df.copy()
     df_time['minuto'] = df_time['timestamp'].dt.floor('min')
     df_agg = df_time.groupby(['minuto', 'riesgo']).size().reset_index(name='conteo')
@@ -149,24 +150,24 @@ else:
     fig_line = px.line(
         df_agg, x='minuto', y='conteo', color='riesgo',
         color_discrete_map={'CRITICO': '#EF553B', 'MEDIO': '#FECB52', 'BAJO': '#00CC96'},
-        title="Eventos por minuto"
+        line_shape="spline"
     )
     st.plotly_chart(fig_line, use_container_width=True)
 
     st.markdown("---")
-    st.subheader("📋 Registro de Eventos Recientes")
+    st.subheader("📋 Registro de Seguridad (Últimos 50 eventos)")
     
-    # Estilizar la tabla
     def color_riesgo(val):
         color = 'red' if val == 'CRITICO' else 'orange' if val == 'MEDIO' else 'green'
         return f'color: {color}; font-weight: bold'
 
     st.dataframe(
         df.head(50).style.applymap(color_riesgo, subset=['riesgo']),
-        use_container_width=True
+        use_container_width=True,
+        hide_index=True
     )
 
-# Lógica de auto-refresco
+# Lógica de auto-refresco controlada
 if auto_refresh:
     time.sleep(5)
     st.rerun()
