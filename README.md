@@ -3,28 +3,19 @@
 ![SentinelAI Banner](https://img.shields.io/badge/SentinelAI-Production--Ready-blue?style=for-the-badge&logo=python)
 ![ML](https://img.shields.io/badge/Algorithm-Isolation%20Forest-orange?style=for-the-badge)
 
-**SentinelAI** es un sistema avanzado de detección de intrusiones en red que utiliza Machine Learning para identificar anomalías sin depender de reglas estáticas. El sistema analiza el comportamiento del tráfico en 4 dimensiones críticas para tomar decisiones autónomas de bloqueo o alerta.
+**SentinelAI** es un sistema avanzado de detección de intrusiones en red que utiliza Machine Learning para identificar anomalías sin depender de reglas estáticas. El sistema analiza el comportamiento del tráfico en 4 dimensiones críticas (intentos, reputación, intensidad y variedad) para tomar decisiones autónomas de bloqueo o alerta.
 
 ---
 
-## 🚀 Características Principales
+## 📊 Arquitectura del Proyecto
 
-- **IA-Driven**: Motor basado en Scikit-Learn (`Isolation Forest`).
-- **Dashboard Dual**: Interfaz de terminal enriquecida (`Rich`) y Dashboard Web interactivo (`Streamlit`).
-- **Validación Estricta**: Modelado de datos con `Pydantic`.
-- **Persistencia Segura**: Registro de logs en SQLite y gestión de credenciales con `bcrypt`.
-- **Despliegue Rápido**: Dockerfile optimizado con `uv`.
+El sistema está diseñado bajo una arquitectura modular para facilitar su escalabilidad:
 
----
-
-## 📊 Arquitectura del Sistema
-
-El sistema se divide en módulos independientes:
-
-1.  **`analizador_ml.py`**: El cerebro del NIDS. Evalúa el riesgo comparando el tráfico actual con el histórico.
-2.  **`app_streamlit.py`**: Interfaz visual con gráficas en tiempo real de protocolos, riesgos y línea de tiempo.
-3.  **`simulador_trafico.py`**: Simulador de bajo nivel para pruebas en terminal.
-4.  **`database_manager.py`**: Manejo de `sentinel_logs.db`.
+- **`analizador_ml.py`**: El motor de IA. Implementa `Isolation Forest` para detección de anomalías.
+- **`app_streamlit.py`**: Dashboard Web interactivo con analítica avanzada en tiempo real.
+- **`simulador_trafico.py`**: Interfaz de terminal (CLI) para monitoreo ligero.
+- **`database_manager.py`**: Capa de persistencia en SQLite con gestión de conexiones seguras.
+- **`schema_seguridad.py`**: Validación de datos con Pydantic V2 para asegurar la integridad de la red.
 
 ---
 
@@ -40,42 +31,56 @@ El sistema se divide en módulos independientes:
 
 ---
 
-## 🛠️ Instalación y Uso
+## 🛠️ Guía de Inicio Rápido
 
-### Con Docker (Recomendado)
+### Opción A: Despliegue con Docker (Recomendado)
+Ideal para entornos aislados y listos para producción.
 
-```bash
-docker build -t sentinel-ai-nids .
-docker run -p 8501:8501 sentinel-ai-nids
-```
-*Accede a http://localhost:8501 para ver el dashboard web.*
+1.  **Construir la imagen**:
+    ```bash
+    docker build -t sentinel-nids .
+    ```
+2.  **Lanzar el contenedor**:
+    ```bash
+    docker run -p 8501:8501 sentinel-nids
+    ```
+3.  **Acceso**: Abre tu navegador en [http://localhost:8501](http://localhost:8501).
 
-### Instalación Manual
+### Opción B: Ejecución Local (Python)
+Para desarrollo y pruebas rápidas.
 
-1. Instalar dependencias:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Iniciar Dashboard Web:
-   ```bash
-   streamlit run app_streamlit.py
-   ```
-3. O iniciar modo Terminal:
-   ```bash
-   python simulador_trafico.py
-   ```
-
----
-
-## 🛠️ Tecnologías
-
-- **Lenguaje:** Python 3.12+
-- **IA:** Scikit-Learn (Isolation Forest), NumPy
-- **Web/UI:** Streamlit, Plotly, Rich
-- **Data:** Pydantic, Pandas, SQLite
-- **Seguridad:** Bcrypt
-- **DevOps:** Docker, uv
+1.  **Instalar dependencias**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+2.  **Iniciar el Dashboard Web**:
+    ```bash
+    streamlit run app_streamlit.py
+    ```
+3.  **Iniciar el Monitor de Terminal (Opcional)**:
+    ```bash
+    python simulador_trafico.py
+    ```
 
 ---
 
-*Desarrollado para la protección proactiva de infraestructuras críticas.*
+## 🧪 Cómo probar el sistema
+
+Una vez dentro del **Dashboard Web (Streamlit)**:
+1. Dirígete al panel lateral izquierdo.
+2. Ajusta la cantidad de eventos en el slider.
+3. Haz clic en **"Lanzar Simulación"**.
+4. Observa cómo las gráficas de **Distribución de Riesgos** y la **Línea de Tiempo** se actualizan automáticamente al detectar anomalías generadas por el motor de IA.
+
+---
+
+## 🛠️ Tecnologías Utilizadas
+
+- **Core:** Python 3.12+
+- **Machine Learning:** Scikit-Learn, NumPy
+- **Visualización:** Plotly, Streamlit, Rich
+- **Data & Ops:** Pydantic V2, Pandas, SQLite, Docker (uv optimized)
+
+---
+
+*Desarrollado para la protección proactiva de infraestructuras críticas mediante inteligencia artificial.*
