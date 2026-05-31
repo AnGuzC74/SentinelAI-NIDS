@@ -11,7 +11,7 @@ class MotorDecision:
 
     def _entrenar_con_contexto(self):
         # [Intentos, Reputación, Intensidad, Variedad_Protocolos]
-        normal = np.random.randint(0, 4, size=(100, 4)) 
+        normal = np.random.randint(0, 4, size=(100, 4))
         ataques = np.random.randint(10, 25, size=(10, 4))
         X = np.vstack([normal, ataques])
         self.modelo.fit(X)
