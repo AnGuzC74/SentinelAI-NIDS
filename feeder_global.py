@@ -47,20 +47,21 @@ def generar_registro_industrial(motor):
     reporte = motor.generar_reporte(log)
 
     db.guardar_evento(log, reporte['riesgo'], reporte['diagnostico'], nodo_objetivo['estado'], nodo_objetivo['lat'], nodo_objetivo['lon'], embedding=None)
-    print(f"🛰️ [TELEMETRÍA PARETO] -> {nodo_objetivo['estado']} | IP: {ip_origen} | Intentos: {intentos_fallidos}")
+    print(f"🛰️ [NUBE MLOPS ACELERADA] -> {nodo_objetivo['estado']} | IP: {ip_origen} | Intentos: {intentos_fallidos}")
 
 def ejecutar_pipeline():
     db.inicializar_db()
     motor = MotorDecision()
-    while True:
-        try:
-            tiempo_espera = max(5, int(random.expovariate(1.0 / 12.0)))
-            generar_registro_industrial(motor)
-            time.sleep(tiempo_espera)
-        except KeyboardInterrupt:
-            break
-        except Exception as e:
-            time.sleep(10)
+
+    print("🚀 FASE 1: Generando ráfaga masiva inicial para poblar gráficos al instante...")
+    for _ in range(20):
+        generar_registro_industrial(motor)
+        time.sleep(0.4)
+
+    print("🔄 FASE 2: Iniciando ventana analítica de alta frecuencia (Modo Reclutador)...")
+    for _ in range(30):
+        generar_registro_industrial(motor)
+        time.sleep(random.randint(4, 7))
 
 if __name__ == "__main__":
     ejecutar_pipeline()
