@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import os
 import time
+import random
+from datetime import datetime
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import plotly.express as px
@@ -11,11 +13,17 @@ from sklearn.cluster import DBSCAN, KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import GradientBoostingRegressor
 
+# Cargar variables de entorno
 load_dotenv(override=True)
 st.set_page_config(page_title="SentinelAI VZLA Pro", layout="wide", page_icon="🛡️")
+
+# Inicialización de APIs y Conexiones Cloud
+url_supabase = os.environ.get("SUPABASE_URL", "").strip()
+key_supabase = os.environ.get("SUPABASE_KEY", "").strip()
 API_GROQ = os.environ.get("GROQ_API_KEY", "").strip()
 client_groq = Groq(api_key=API_GROQ) if API_GROQ else None
 
+# Estilos visuales de alto contraste
 st.markdown("""
     <style>
     .stApp { background-color: #f8fafc; color: #0f172a; }
@@ -28,18 +36,56 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-def cargar_datos():
-    url = os.environ.get("SUPABASE_URL", "").strip()
-    key = os.environ.get("SUPABASE_KEY", "").strip()
-    if not url or not key: return pd.DataFrame()
+# ----------------------------------------------------------------------------------
+# SIMULADOR EN VIVO INTEGRADO (CORRE SOLO CUANDO LA APP ESTÁ ABIERTA)
+# ----------------------------------------------------------------------------------
+NODOS_INFRAESTRUCTURA = [
+    {"estado": "Caracas, DT", "lat": 10.48, "lon": -66.89, "peso_ataques": 0.50},
+    {"estado": "Maracaibo, Zulia", "lat": 10.64, "lon": -71.61, "peso_ataques": 0.30},
+    {"estado": "Valencia, Carabobo", "lat": 10.16, "lon": -68.00, "peso_ataques": 0.15},
+    {"estado": "Barquisimeto, Lara", "lat": 10.06, "lon": -69.34, "peso_ataques": 0.05}
+]
+BOTNET_REPETITIVA = ["190.202.45.110", "201.244.18.92", "186.24.195.5", "200.11.205.14"]
+
+def auto_inyectar_datos_frescos(supabase_client):
+    """Inyecta ráfagas rápidas de simulación directo a Supabase al cargar la web"""
+    # Genera 3 registros nuevos en cada recarga para dar la sensación de actualización constante
+    for _ in range(3):
+        nodo = random.choices(NODOS_INFRAESTRUCTURA, weights=[n["peso_ataques"] for n in NODOS_INFRAESTRUCTURA])[0]
+        ip = random.choice(BOTNET_REPETITIVA) if random.random() > 0.3 else f"{random.randint(1,254)}.{random.randint(1,254)}.{random.randint(1,254)}.{random.randint(1,254)}"
+        intentos = max(5, min(int((1.0 / (random.random() ** (1.0 / 1.5))) * 5), 120))
+        protocolo = "Xmas-Scan/Exploit" if intentos > 70 else "SSH-Bruteforce"
+        riesgo = "CRITICO" if intentos > 60 else ("ALTO" if intentos > 30 else "MEDIO")
+        diagnostico = f"Ataque detectado en nodo mediante {protocolo}. Actividad anómala con {intentos} intentos fallidos."
+
+        nuevo_log = {
+            "ip_origen": ip, "intentos_fallidos": intentos, "protocolo": protocolo,
+            "timestamp": datetime.now().isoformat(), "riesgo": riesgo, "diagnostico_ia": diagnostico,
+            "estado": nodo["estado"], "lat": nodo["lat"], "lon": nodo["lon"]
+    }
+        try: supabase_client.table("logs_globales").insert(nuevo_log).execute()
+        except: pass
+
+def cargar_datos_portafolio():
+    if not url_supabase or not key_supabase: return pd.DataFrame()
     try:
-        supabase: Client = create_client(url, key)
+        supabase: Client = create_client(url_supabase, key_supabase)
+
+        # El programa inyecta datos automáticamente al ser ejecutado/visitado
+        auto_inyectar_datos_frescos(supabase)
+
+        # Descarga los últimos 200 registros de Supabase para alimentar el mapa
         response = supabase.table("logs_globales").select("*").order("timestamp", desc=True).limit(200).execute()
         return pd.DataFrame(response.data)
-    except: return pd.DataFrame()
+    except:
+        return pd.DataFrame()
 
-df = cargar_datos()
+# Carga de datos e inyección simultánea
+df = cargar_datos_portafolio()
 
+# ----------------------------------------------------------------------------------
+# INTERFAZ SIDEBAR (CONSULTOR IA GROQ CLOUD)
+# ----------------------------------------------------------------------------------
 st.sidebar.title("🤖 Consultor de Incidentes IA (Groq Cloud)")
 modelo_seleccionado = st.sidebar.selectbox("Escoge el motor de IA:", ["llama-3.3-70b-versatile", "llama3-8b-8192", "llama3-70b-8192"])
 pregunta = st.sidebar.text_input("Escribe tu consulta de seguridad:")
@@ -55,6 +101,9 @@ if pregunta and client_groq and df is not None and not df.empty:
             st.sidebar.info(completion.choices[0].message.content)
         except Exception as e: st.sidebar.error(f"⚠️ Error: {e}")
 
+# ----------------------------------------------------------------------------------
+# CUERPO PRINCIPAL DEL DASHBOARD
+# ----------------------------------------------------------------------------------
 st.title("🛡️ SentinelAI: Centro de Inteligencia Venezuela")
 st.markdown("### 🇻🇪 Control Geográfico, Agrupamiento Avanzado y Modelos Predictivos (MLOps)")
 
@@ -80,15 +129,6 @@ if df is not None and not df.empty:
 
     with tab_clustering:
         st.header("🧠 Configuración y Control de Agrupamiento No Supervisado")
-        ctrl_col1, ctrl_col2 = st.columns(2)
-        with ctrl_col1:
-            frec_dbscan = st.slider("Frecuencia de escaneo basal (Segundos):", min_value=5, max_value=60, value=15, key="sld_db")
-            btn_ejecutar_dbscan = st.button("⚡ Ejecutar DBSCAN Ahora", use_container_width=True)
-        with ctrl_col2:
-            frec_kmeans = st.slider("Ventana de agregación histórica (Días):", min_value=1, max_value=30, value=7, key="sld_km")
-            btn_ejecutar_kmeans = st.button("⚡ Ejecutar K-Means Ahora", use_container_width=True)
-
-        st.markdown("---")
         disp_col1, disp_col2 = st.columns(2)
         with disp_col1:
             st.subheader("🗺️ Distribución Espacial de Alta Frecuencia (DBSCAN)")
@@ -97,8 +137,7 @@ if df is not None and not df.empty:
                 dbscan = DBSCAN(eps=0.3, min_samples=2)
                 df['Cluster_Espacial'] = dbscan.fit_predict(X_spatial)
                 df['Nombre_Cluster'] = df['Cluster_Espacial'].apply(lambda x: "Ruido / Eventos Dispersos" if x == -1 else f"Hotspot Geográfico {x}")
-                fig_spatial_disp = px.scatter(df, x="lon", y="lat", color="Nombre_Cluster", size="intentos_fallidos", title=f"DBSCAN (Frecuencia: {frec_dbscan}s)")
-                fig_spatial_disp.update_traces(marker=dict(opacity=0.8, line=dict(width=1, color='DarkSlateGrey')))
+                fig_spatial_disp = px.scatter(df, x="lon", y="lat", color="Nombre_Cluster", size="intentos_fallidos", title="DBSCAN (Frecuencia: Actualización en vivo)")
                 st.plotly_chart(fig_spatial_disp, use_container_width=True)
         with disp_col2:
             st.subheader("🕒 Distribución Temporal de Frecuencia Semanal (K-Means)")
@@ -108,13 +147,8 @@ if df is not None and not df.empty:
                 X_scaled = scaler.fit_transform(X_behavior)
                 kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
                 df['ID_Perfil'] = kmeans.fit_predict(X_scaled)
-                def mapear_perfil(id_p):
-                    if id_p == 0: return "Perfil Semanal A: Escaneos de Fin de Semana"
-                    elif id_p == 1: return "Perfil Semanal B: Fuerza Bruta Laboral"
-                    else: return "Perfil Semanal C: Ráfagas Nocturnas"
-                df['Perfil_Atacante'] = df['ID_Perfil'].apply(mapear_perfil)
-                fig_behavior_disp = px.scatter(df, x="dia_semana", y="hora", color="Perfil_Atacante", size="intentos_fallidos", title=f"K-Means (Ventana: {frec_kmeans} Días)")
-                fig_behavior_disp.update_traces(marker=dict(opacity=0.8, line=dict(width=1, color='DarkSlateGrey')))
+                df['Perfil_Atacante'] = df['ID_Perfil'].apply(lambda x: f"Perfil Atacante {x}")
+                fig_behavior_disp = px.scatter(df, x="dia_semana", y="hora", color="Perfil_Atacante", size="intentos_fallidos", title="K-Means (Ventana Dinámica)")
                 st.plotly_chart(fig_behavior_disp, use_container_width=True)
 
     with tab_prediccion:
@@ -141,6 +175,9 @@ if df is not None and not df.empty:
 
     st.markdown("---")
     st.dataframe(df[['timestamp', 'ip_origen', 'estado', 'riesgo', 'diagnostico_ia']].head(30), use_container_width=True)
+else:
+    st.warning("📡 Inicializando base de datos central en Supabase...")
 
-time.sleep(15)
+# Recarga automática rápida de 4 segundos MIENTRAS la pestaña del navegador esté abierta
+time.sleep(4)
 st.rerun()
