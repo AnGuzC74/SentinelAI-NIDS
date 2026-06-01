@@ -1,0 +1,32 @@
+name: SentinelAI Autonomous Accelerated Feeder
+
+on:
+  schedule:
+    # GitHub encenderá el alimentador de datos automáticamente en la nube cada 5 minutos
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Permite al usuario forzar una ráfaga masiva haciendo un clic en GitHub
+
+jobs:
+  inyectar-telemetria-acelerada:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar Código de la Rama de Desarrollo
+        uses: actions/checkout@v3
+        with:
+          ref: desarrollo-frontend-ml
+
+      - name: Configurar Entorno Python Industrial
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar Dependencias MLOps
+        run: |
+          pip install -r requirements.txt
+
+      - name: Ejecutar Pipeline de Ingesta Acelerada
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python feeder_global.py

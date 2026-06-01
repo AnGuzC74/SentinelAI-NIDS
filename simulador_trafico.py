@@ -33,12 +33,12 @@ console = Console()
 # Coloca aquí tu URL de Webhook.site para recibir alertas.
 # Si se deja vacío o como ejemplo, el sistema operará solo localmente.
 # ==========================================================
-WEBHOOK_URL = "TU_URL_AQUI" 
+WEBHOOK_URL = "TU_URL_AQUI"
 
 def enviar_alerta_webhook(decision, log):
     """Envía alerta solo si la URL ha sido configurada correctamente."""
     if not WEBHOOK_URL or "TU_URL" in WEBHOOK_URL or not WEBHOOK_URL.startswith("http"):
-        return 
+        return
 
     payload = {
         "event": "CRITICAL_INTRUSION",
@@ -58,7 +58,7 @@ def generar_dashboard(eventos_log):
     for e in eventos_log:
         totales[e['riesgo']] += 1
     total = sum(totales.values()) or 1
-    
+
     def crear_barra(label, count, color):
         ancho = 20
         proc = int((count / total) * ancho)
@@ -66,7 +66,7 @@ def generar_dashboard(eventos_log):
 
     # Indicador visual del estado del Webhook
     webhook_status = "[green]ONLINE[/]" if "http" in WEBHOOK_URL.lower() and "TU_URL" not in WEBHOOK_URL else "[yellow]LOCAL_ONLY[/]"
-    
+
     grafico = Panel(
         f"{crear_barra('CRÍTICO', totales['CRITICO'], 'bold red')}\n"
         f"{crear_barra('MEDIO', totales['MEDIO'], 'yellow')}\n"
@@ -91,12 +91,12 @@ def generar_resumen_ejecutivo(eventos_log):
     """Cierre del programa: Muestra el reporte final pase lo que pase."""
     console.clear()
     console.print(Panel("[bold green]SISTEMA SENTINEL: REPORTE ESTRATÉGICO FINAL[/bold green]", expand=False))
-    
+
     conteo_ips = {}
     for e in eventos_log:
         if e['riesgo'] == "CRITICO":
             conteo_ips[e['ip']] = conteo_ips.get(e['ip'], 0) + 1
-    
+
     ips_top = sorted(conteo_ips.items(), key=lambda x: x[1], reverse=True)[:5]
     table = Table(title="Top Agresores (Prioridad de Bloqueo)", title_style="bold red")
     table.add_column("Dirección IP", style="magenta")
@@ -138,10 +138,10 @@ def ejecutar_agente():
                 log = LogEntrada(**data)
                 decision = motor.generar_reporte(log)
                 guardar_evento(log, decision.nivel_riesgo)
-                
+
                 if decision.nivel_riesgo == "CRITICO":
                     enviar_alerta_webhook(decision, log)
-                
+
                 eventos_log.append({
                     "hora": log.timestamp.strftime("%H:%M:%S"),
                     "ip": log.ip_origen,
