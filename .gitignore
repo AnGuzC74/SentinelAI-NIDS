@@ -1,20 +1,18 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Databases
-sentinel_logs.db
-
-# Environments
 .env
-.venv
-env/
-venv/
+*.env
+secrets.toml
+.streamlit/secrets.toml
 ds_env/
-ENV/
-env.bak/
-venv.bak/
-
-# Project specific
-*.log
+include/
+lib/
+Scripts/
+share/
+pyvenv.cfg
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
