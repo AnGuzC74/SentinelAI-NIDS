@@ -46,6 +46,13 @@ Seguimiento del rendimiento de los modelos y pronósticos de vulnerabilidad.
   <img src="assets/pareto_analysis.png" width="45%" alt="Pareto Analysis">
 </p>
 
+### 4. Prueba de Simulación en Tiempo Real
+No necesitas instalar nada para ver el poder del motor de IA. Sigue estos pasos en la demo en vivo:
+1.  Accede a la **[Demo en Vivo](https://sentinelai-nids-lk3vflstx3kc4dr7ujo6sa.streamlit.app/)**.
+2.  Espera 5 segundos; el sistema inyectará automáticamente telemetría simulada desde los nodos de Venezuela.
+3.  Interactúa con el **Consultor de Incidentes IA** en la barra lateral haciendo preguntas como: *"¿Cuál es la IP con más riesgo detectada?"*
+4.  Observa cómo los gráficos de **Clustering** y **Predicción** se recalibran automáticamente con cada nuevo evento detectado.
+
 ---
 
 ## 🛠️ Stack Tecnológico Avanzado
