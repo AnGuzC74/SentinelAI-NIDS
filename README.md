@@ -71,6 +71,7 @@ Análisis forense con Llama 3 y modelos predictivos para anticipar futuras vulne
 - **AI/ML**: Scikit-learn (Isolation Forest, DBSCAN, K-Means), Groq Cloud (Llama 3.3-70B).
 - **Backend/Data**: Supabase (PostgreSQL), Python 3.11.
 - **DevOps**: Gestión del ciclo de vida MLOps y contenedores.
+- **Enlace**: En el siguiente enlace puede ver la simulación en vivo e interactuar  https://sentinelai-nids-lk3vflstx3kc4dr7ujo6sa.streamlit.app/ 
 
 ---
 
